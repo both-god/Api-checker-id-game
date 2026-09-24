@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spiderexusX Checker - Live Tester</title>
+    <style>
+        :root { --primary: #00e6b8; --bg: #0b1120; --box: #1e293b; --text: #f1f5f9; --error: #ff4d4f; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .container { background: var(--box); padding: 35px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); width: 100%; max-width: 420px; text-align: center; border: 1px solid #334155; }
+        .logo svg { width: 70px; height: 70px; fill: var(--primary); margin-bottom: 10px; }
+        h1 { margin: 0 0 25px 0; font-size: 22px; color: var(--primary); }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; font-size: 13px; margin-bottom: 5px; color: #94a3b8; }
+        select, input { width: 100%; padding: 14px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; font-size: 15px; outline: none; }
+        select:focus, input:focus { border-color: var(--primary); }
+        button { width: 100%; padding: 14px; background: var(--primary); color: #000; font-weight: bold; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+        button:disabled { background: #475569; cursor: not-allowed; }
+        #resultBox { margin-top: 20px; padding: 15px; background: #0b1120; border-radius: 8px; border: 1px solid #334155; text-align: left; font-family: monospace; font-size: 13px; display: none; white-space: pre-wrap; }
+        .error-border { border-color: var(--error) !important; color: var(--error); }
+        .success-border { border-color: var(--primary) !important; color: var(--primary); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <h1>spiderexusX checker</h1>
+        
+        <div class="input-group">
+            <label>ហ្គេម (Game)</label>
+            <select id="gameType" onchange="toggleZone()"><option value="ff">Free Fire (FF)</option><option value="ml">Mobile Legends (MLBB)</option></select>
+        </div>
+        <div class="input-group"><label>Game ID</label><input type="number" id="gameId" placeholder="ឧ: 94949"></div>
+        <div class="input-group" id="zoneGroup" style="display:none;"><label>Zone ID</label><input type="number" id="gameZone" placeholder="ឧ: 1234"></div>
+        
+        <button id="checkBtn" onclick="checkData()">🔍 ពិនិត្យទិន្នន័យ (Check)</button>
+        <div id="resultBox"></div>
+    </div>
+
+    <script>
+        function toggleZone() {
+            const game = document.getElementById('gameType').value;
+            document.getElementById('zoneGroup').style.display = game === 'ml' ? 'block' : 'none';
+        }
+
+        async function checkData() {
+            const game = document.getElementById('gameType').value;
+            const id = document.getElementById('gameId').value;
+            const zone = document.getElementById('gameZone').value;
+            const btn = document.getElementById('checkBtn');
+            const resBox = document.getElementById('resultBox');
+
+            if (!id) return alert("សូមបញ្ចូល ID!");
+            if (game === 'ml' && !zone) return alert("សូមបញ្ចូល Zone!");
+
+            btn.disabled = true; btn.textContent = "⏳ កំពុងទាញទិន្នន័យពិត...";
+            resBox.style.display = 'block'; resBox.className = '';
+            resBox.textContent = "Connecting to Game Server...";
+
+            let url = `/api/check/${game}?id=${id}` + (game === 'ml' ? `&zone=${zone}` : '');
+
+            try {
+                const req = await fetch(url);
+                const data = await req.json();
+                
+                // បើ Error (ID ខុស) លោតពណ៌ក្រហម
+                if (req.status !== 200) {
+                    resBox.className = 'error-border';
+                } else {
+                    resBox.className = 'success-border';
+                }
+                resBox.textContent = JSON.stringify(data, null, 2);
+            } catch (e) {
+                resBox.className = 'error-border';
+                resBox.textContent = "❌ បរាជ័យក្នុងការភ្ជាប់ទៅកាន់ Server!";
+            }
+            btn.disabled = false; btn.textContent = "🔍 ពិនិត្យទិន្នន័យ (Check)";
+        }
+    </script>
+</body>
+</html>
